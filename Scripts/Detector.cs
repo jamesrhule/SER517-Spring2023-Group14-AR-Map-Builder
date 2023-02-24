@@ -288,6 +288,18 @@ public class Detector : MonoBehaviour
     }
 }
 
+using UnityEngine;
+using Unity.Barracuda;
+using System.Collections;
+using System.Collections.Generic;
+
+public interface Detector
+{
+    int IMAGE_SIZE { get; }
+    void Start();
+    IEnumerator Detect(Color32[] picture, System.Action<IList<BoundingBox>> callback);
+
+}
 
 public class DimensionsBase
 {
@@ -310,6 +322,9 @@ public class BoundingBox
     public string Label { get; set; }
 
     public float Confidence { get; set; }
+
+    // whether the bounding box already is used to raycast anchors
+    public bool Used { get; set; }
 
     public Rect Rect
     {
