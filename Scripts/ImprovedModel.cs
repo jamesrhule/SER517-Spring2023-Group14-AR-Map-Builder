@@ -69,5 +69,19 @@ namespace YOLOv3MLNet
                 }
             }
         }
+
+        public static PredictionEngine<YoloV3BitmapData, YoloV3Prediction> LoadPredictionEngine(MLContext mlContext, string modelPath)
+        {
+            // Define scoring pipeline
+            var pipeline = mlContext.Transforms.ResizeImages(inputColumnName: "bitmap", outputColumnName: "image", imageWidth: 416, imageHeight: 416, resizing: ResizingKind.IsoPad)
+                            .Append(mlContext.Transforms.ExtractPixels(outputColumnName: "image", scaleImage: 1f / 255f))
+                            .Append(mlContext.Transforms.ApplyOnnxModel(inputColumnNames: new[] { "image" }, outputColumnNames: new[] { "bboxes", "classes" }, modelFile: modelPath));
+
+            // Fit on empty list to obtain input data schema
+            var model = pipeline.Fit(mlContext.Data.LoadFromEnumerable(new List<YoloV3BitmapData>()));
+
+            // Create prediction engine
+            return mlContext.Model.CreatePredictionEngine<YoloV3BitmapData, YoloV3Prediction>(model);
+        }
     }
 }
