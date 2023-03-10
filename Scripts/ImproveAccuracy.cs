@@ -25,3 +25,14 @@ foreach (var detection in detections)
     var rect = new Rect(detection.X, detection.Y, detection.Width, detection.Height);
     DrawBoundingBox(rect, detection.Confidence);
 }
+
+// Evaluate the model on a validation set
+var validationSet = new Dataset();
+validationSet.Load("validation_data");
+
+var metrics = detector.Evaluate(validationSet);
+Debug.Log($"Average precision: {metrics.AveragePrecision}");
+Debug.Log($"Average recall: {metrics.AverageRecall}");
+
+// Save the model
+detector.Save("YOLOv3_new.onnx");
