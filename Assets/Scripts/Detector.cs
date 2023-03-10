@@ -59,22 +59,124 @@ public class Detector : MonoBehaviour
     }
 
 
-    public IEnumerator Detect(Color32[] picture, System.Action<IList<BoundingBox>> callback)
+    // public IEnumerator Detect(Color32[] picture, System.Action<IList<BoundingBox>> callback)
+    // {
+    //     using (var tensor = TransformInput(picture, IMAGE_SIZE, IMAGE_SIZE))
+    //     {
+    //         var inputs = new Dictionary<string, Tensor>();
+    //         inputs.Add(INPUT_NAME, tensor);
+    //         yield return StartCoroutine(worker.ExecuteAsync(inputs));
+
+    //         var output = worker.PeekOutput(OUTPUT_NAME);
+    //         var results = ParseOutputs(output);
+    //         var boxes = FilterBoundingBoxes(results, 5, MINIMUM_CONFIDENCE);
+
+    //         callback(boxes);
+    //     }
+    // }
+    public IList Detect(Texture2D texture, int numResultsPerClass = 1, float threshold = 0.2f, int angle = 0, Flip flip = Flip.NONE)
     {
-        using (var tensor = TransformInput(picture, IMAGE_SIZE, IMAGE_SIZE))
+        var shape = new TFShape(1, _inputWidth, _inputHeight, 3);
+        var input = graph[_inputName][0];
+        TFTensor inputTensor = null;
+
+        if (input.OutputType == TFDataType.Float)
         {
-            var inputs = new Dictionary<string, Tensor>();
-            inputs.Add(INPUT_NAME, tensor);
-            yield return StartCoroutine(worker.ExecuteAsync(inputs));
-
-            var output = worker.PeekOutput(OUTPUT_NAME);
-            var results = ParseOutputs(output);
-            var boxes = FilterBoundingBoxes(results, 5, MINIMUM_CONFIDENCE);
-
-            callback(boxes);
+            float[] imgData = Utils.DecodeTexture(texture, _inputWidth, _inputHeight,
+                                                  _inputMean, _inputStd, angle, flip);
+            inputTensor = TFTensor.FromBuffer(shape, imgData, 0, imgData.Length);
         }
+        else if (input.OutputType == TFDataType.UInt8)
+        {
+            byte[] imgData = Utils.DecodeTexture(texture, _inputWidth, _inputHeight, angle, flip);
+            inputTensor = TFTensor.FromBuffer(shape, imgData, 0, imgData.Length);
+        }
+        else
+        {
+            throw new Exception($"Input date type {input.OutputType} is not supported.");
+        }
+
+        var runner = session.GetRunner();
+        runner.AddInput(input, inputTensor);
+
+        IList results;
+
+        if (_detectionModel == DetectionModels.SSD)
+        {
+            results = ParseSSD(runner, threshold, numResultsPerClass);
+        }
+        else
+        {
+            results = ParseYOLO(runner, threshold, numResultsPerClass);
+        }
+
+        inputTensor.Dispose();
+
+        return results;
     }
 
+    private IList ParseSSD(TFSession.Runner runner, float threshold, int numResultsPerClass)
+    {
+        runner.Fetch(graph["detection_boxes"][0],
+                     graph["detection_classes"][0],
+                     graph["detection_scores"][0],
+                     graph["num_detections"][0]);
+
+        var outputs = runner.Run();
+
+        var boxes = outputs[0].GetValue() as float[,,];
+        var classes = outputs[1].GetValue() as float[,];
+        var scores = outputs[2].GetValue() as float[,];
+        var num_detections = outputs[3].GetValue() as float[];
+
+        foreach (var o in outputs) o.Dispose();
+
+        var results = new List<Dictionary<string, object>>();
+        var counters = new Dictionary<string, int>();
+
+        for (int i = 0; i < (int)num_detections[0]; i++)
+        {
+            if (scores[0, i] < threshold) continue;
+
+            string detectedClass = labels[(int)classes[0, i]];
+
+            if (counters.ContainsKey(detectedClass))
+            {
+                if (counters[detectedClass] >= numResultsPerClass) continue;
+                counters[detectedClass] += 1;
+            }
+            else
+            {
+                counters.Add(detectedClass, 1);
+            }
+
+            float ymin = Math.Max(0, boxes[0, i, 0]);
+            float xmin = Math.Max(0, boxes[0, i, 1]);
+            float ymax = boxes[0, i, 2];
+            float xmax = boxes[0, i, 3];
+
+            var rect = new Dictionary<string, float>
+                {
+                    { "x", xmin },
+                    { "y", ymin },
+                    { "w", Math.Min(1 - xmin, xmax - xmin) },
+                    { "h", Math.Min(1 - ymin, ymax - ymin) }
+                };
+
+            var result = new Dictionary<string, object>
+                {
+                    { "rect", rect },
+                    { "confidenceInClass", scores[0, i] },
+                    { "detectedClass", detectedClass }
+                };
+
+            results.Add(result);
+        }
+
+        //Utils.Log(results);
+
+        return results;
+    }
 
     public static Tensor TransformInput(Color32[] pic, int width, int height)
     {
