@@ -1,52 +1,53 @@
 using System;
-using Barracuda;
 using UnityEngine;
-using Debug = UnityEngine.Debug;
+using Unity.Barracuda;
 using System.Linq;
 using System.Collections;
 using System.Collections.Generic;
 using System.Text.RegularExpressions;
 
 
-public class Detector : MonoBehaviour
+public class DetectorYolo2 : MonoBehaviour, Detector
 {
     public NNModel modelFile;
     public TextAsset labelsFile;
 
-
-    // for .nn model
-    // private static int IMAGE_MEAN = 0;
-    // private static float IMAGE_STD = 255f;
-    // private const string INPUT_NAME = "input_1";
-    // private const string OUTPUT_NAME = "conv2d_9/BiasAdd";
-
-
-    // for .onnx model
     private const int IMAGE_MEAN = 0;
-    private const float IMAGE_STD = 1f;
-    private const string INPUT_NAME = "image";
-    private const string OUTPUT_NAME = "grid";
+    private const float IMAGE_STD = 255.0F;
 
-    public const int IMAGE_SIZE = 416;
-    
-    // Minimum detection confidence to track a detection.
-    private const float MINIMUM_CONFIDENCE = 0.3f;
+    // ONNX model input and output name. Modify when switching models.
+    //These aren't const values because they need to be easily edited on the component before play mode
+
+    public string INPUT_NAME;
+    public string OUTPUT_NAME;
+
+    //This has to stay a const
+    private const int _image_size = 416;
+    public int IMAGE_SIZE { get => _image_size; }
+
+
+    // Minimum detection confidence to track a detection
+    public float MINIMUM_CONFIDENCE;
 
     private IWorker worker;
-
 
     public const int ROW_COUNT = 13;
     public const int COL_COUNT = 13;
     public const int BOXES_PER_CELL = 5;
     public const int BOX_INFO_FEATURE_COUNT = 5;
-    public const int CLASS_COUNT = 20;
+
+    //Update this!
+    public int CLASS_COUNT;
+
     public const float CELL_WIDTH = 32;
     public const float CELL_HEIGHT = 32;
     private string[] labels;
 
     private float[] anchors = new float[]
     {
-        1.08F, 1.19F, 3.42F, 4.41F, 6.63F, 11.38F, 9.42F, 5.11F, 16.62F, 10.52F
+        // 1.08F, 1.19F, 3.42F, 4.41F, 6.63F, 11.38F, 9.42F, 5.11F, 16.62F, 10.52F  // yolov2-tiny-voc
+        //0.57273F, 0.677385F, 1.87446F, 2.06253F, 3.33843F, 5.47434F, 7.88282F, 3.52778F, 9.77052F, 9.16828F // yolov2-tiny
+        0.57273F, 0.677385F, 1.87446F, 2.06253F, 3.33843F, 5.47434F, 7.88282F, 3.52778F, 9.77052F, 9.16828F  // yolov2-tiny-food
     };
 
 
@@ -55,128 +56,28 @@ public class Detector : MonoBehaviour
         this.labels = Regex.Split(this.labelsFile.text, "\n|\r|\r\n")
             .Where(s => !String.IsNullOrEmpty(s)).ToArray();
         var model = ModelLoader.Load(this.modelFile);
-        this.worker = WorkerFactory.CreateWorker(WorkerFactory.Type.ComputePrecompiled, model);
+        // https://docs.unity3d.com/Packages/com.unity.barracuda@1.0/manual/Worker.html
+        //These checks all check for GPU before CPU as GPU is preferred if the platform + rendering pipeline support it
+        this.worker = GraphicsWorker.GetWorker(model);
     }
 
 
-    // public IEnumerator Detect(Color32[] picture, System.Action<IList<BoundingBox>> callback)
-    // {
-    //     using (var tensor = TransformInput(picture, IMAGE_SIZE, IMAGE_SIZE))
-    //     {
-    //         var inputs = new Dictionary<string, Tensor>();
-    //         inputs.Add(INPUT_NAME, tensor);
-    //         yield return StartCoroutine(worker.ExecuteAsync(inputs));
-
-    //         var output = worker.PeekOutput(OUTPUT_NAME);
-    //         var results = ParseOutputs(output);
-    //         var boxes = FilterBoundingBoxes(results, 5, MINIMUM_CONFIDENCE);
-
-    //         callback(boxes);
-    //     }
-    // }
-    public IList Detect(Texture2D texture, int numResultsPerClass = 1, float threshold = 0.2f, int angle = 0, Flip flip = Flip.NONE)
+    public IEnumerator Detect(Color32[] picture, System.Action<IList<BoundingBox>> callback)
     {
-        var shape = new TFShape(1, _inputWidth, _inputHeight, 3);
-        var input = graph[_inputName][0];
-        TFTensor inputTensor = null;
-
-        if (input.OutputType == TFDataType.Float)
+        using (var tensor = TransformInput(picture, IMAGE_SIZE, IMAGE_SIZE))
         {
-            float[] imgData = Utils.DecodeTexture(texture, _inputWidth, _inputHeight,
-                                                  _inputMean, _inputStd, angle, flip);
-            inputTensor = TFTensor.FromBuffer(shape, imgData, 0, imgData.Length);
+            var inputs = new Dictionary<string, Tensor>();
+            inputs.Add(INPUT_NAME, tensor);
+            yield return StartCoroutine(worker.StartManualSchedule(inputs));
+            //worker.Execute(inputs);
+            var output = worker.PeekOutput(OUTPUT_NAME);
+            Debug.Log("Output: " + output);
+            var results = ParseOutputs(output, MINIMUM_CONFIDENCE);
+            var boxes = FilterBoundingBoxes(results, 5, MINIMUM_CONFIDENCE);
+            callback(boxes);
         }
-        else if (input.OutputType == TFDataType.UInt8)
-        {
-            byte[] imgData = Utils.DecodeTexture(texture, _inputWidth, _inputHeight, angle, flip);
-            inputTensor = TFTensor.FromBuffer(shape, imgData, 0, imgData.Length);
-        }
-        else
-        {
-            throw new Exception($"Input date type {input.OutputType} is not supported.");
-        }
-
-        var runner = session.GetRunner();
-        runner.AddInput(input, inputTensor);
-
-        IList results;
-
-        if (_detectionModel == DetectionModels.SSD)
-        {
-            results = ParseSSD(runner, threshold, numResultsPerClass);
-        }
-        else
-        {
-            results = ParseYOLO(runner, threshold, numResultsPerClass);
-        }
-
-        inputTensor.Dispose();
-
-        return results;
     }
 
-    private IList ParseSSD(TFSession.Runner runner, float threshold, int numResultsPerClass)
-    {
-        runner.Fetch(graph["detection_boxes"][0],
-                     graph["detection_classes"][0],
-                     graph["detection_scores"][0],
-                     graph["num_detections"][0]);
-
-        var outputs = runner.Run();
-
-        var boxes = outputs[0].GetValue() as float[,,];
-        var classes = outputs[1].GetValue() as float[,];
-        var scores = outputs[2].GetValue() as float[,];
-        var num_detections = outputs[3].GetValue() as float[];
-
-        foreach (var o in outputs) o.Dispose();
-
-        var results = new List<Dictionary<string, object>>();
-        var counters = new Dictionary<string, int>();
-
-        for (int i = 0; i < (int)num_detections[0]; i++)
-        {
-            if (scores[0, i] < threshold) continue;
-
-            string detectedClass = labels[(int)classes[0, i]];
-
-            if (counters.ContainsKey(detectedClass))
-            {
-                if (counters[detectedClass] >= numResultsPerClass) continue;
-                counters[detectedClass] += 1;
-            }
-            else
-            {
-                counters.Add(detectedClass, 1);
-            }
-
-            float ymin = Math.Max(0, boxes[0, i, 0]);
-            float xmin = Math.Max(0, boxes[0, i, 1]);
-            float ymax = boxes[0, i, 2];
-            float xmax = boxes[0, i, 3];
-
-            var rect = new Dictionary<string, float>
-                {
-                    { "x", xmin },
-                    { "y", ymin },
-                    { "w", Math.Min(1 - xmin, xmax - xmin) },
-                    { "h", Math.Min(1 - ymin, ymax - ymin) }
-                };
-
-            var result = new Dictionary<string, object>
-                {
-                    { "rect", rect },
-                    { "confidenceInClass", scores[0, i] },
-                    { "detectedClass", detectedClass }
-                };
-
-            results.Add(result);
-        }
-
-        //Utils.Log(results);
-
-        return results;
-    }
 
     public static Tensor TransformInput(Color32[] pic, int width, int height)
     {
@@ -195,7 +96,7 @@ public class Detector : MonoBehaviour
     }
 
 
-    private IList<BoundingBox> ParseOutputs(Tensor yoloModelOutput, float threshold = .3F)
+    private IList<BoundingBox> ParseOutputs(Tensor yoloModelOutput, float threshold)
     {
         var boxes = new List<BoundingBox>();
 
@@ -217,6 +118,7 @@ public class Detector : MonoBehaviour
                     float[] predictedClasses = ExtractClasses(yoloModelOutput, cx, cy, channel);
                     var (topResultIndex, topResultScore) = GetTopResult(predictedClasses);
                     var topScore = topResultScore * confidence;
+                    Debug.Log("DEBUG: results: " + topResultIndex.ToString());
 
                     if (topScore < threshold)
                     {
@@ -234,7 +136,8 @@ public class Detector : MonoBehaviour
                             Height = mappedBoundingBox.Height,
                         },
                         Confidence = topScore,
-                        Label = labels[topResultIndex]
+                        Label = labels[topResultIndex],
+                        Used = false
                     });
                 }
             }
@@ -276,6 +179,7 @@ public class Detector : MonoBehaviour
 
     private float GetConfidence(Tensor modelOutput, int x, int y, int channel)
     {
+        // Debug.Log("ModelOutput " + modelOutput);
         return Sigmoid(modelOutput[0, x, y, channel + 4]);
     }
 
@@ -385,41 +289,6 @@ public class Detector : MonoBehaviour
                     break;
             }
         }
-
         return results;
-    }
-}
-
-
-public class DimensionsBase
-{
-    public float X { get; set; }
-    public float Y { get; set; }
-    public float Height { get; set; }
-    public float Width { get; set; }
-}
-
-
-public class BoundingBoxDimensions : DimensionsBase { }
-
-class CellDimensions : DimensionsBase { }
-
-
-public class BoundingBox
-{
-    public BoundingBoxDimensions Dimensions { get; set; }
-
-    public string Label { get; set; }
-
-    public float Confidence { get; set; }
-
-    public Rect Rect
-    {
-        get { return new Rect(Dimensions.X, Dimensions.Y, Dimensions.Width, Dimensions.Height); }
-    }
-
-    public override string ToString()
-    {
-        return $"{Label}:{Confidence}, {Dimensions.X}:{Dimensions.Y} - {Dimensions.Width}:{Dimensions.Height}";
     }
 }
