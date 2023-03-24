@@ -2,9 +2,6 @@ using UnityEngine;
 using System.Collections;
 using UnityEngine.Networking;
 
-/*Use the following website for Facebook ID:
- * https://findmyfbid.in
- */
 
 public class ProfilePicture : MonoBehaviour
 {
