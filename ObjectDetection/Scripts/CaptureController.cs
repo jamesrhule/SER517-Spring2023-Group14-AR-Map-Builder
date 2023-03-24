@@ -7,6 +7,17 @@ public class CameraController : MonoBehaviour
 {
     public Camera camera;
     public RawImage photoDisplay;
+	private Camera frontCamera;
+    private Camera backCamera;
+
+    private bool isUsingFrontCamera = true;
+	
+	void Start()
+    {
+        frontCamera = Camera.main;
+        backCamera = Camera.allCameras[1];
+        backCamera.enabled = false;
+    }
 
     private Texture2D photoTexture;
 
@@ -37,5 +48,15 @@ public class CameraController : MonoBehaviour
         string filename = string.Format("{0}/photo_{1}.jpg", Application.persistentDataPath, System.DateTime.Now.ToString("yyyyMMdd_HHmmss"));
 
         File.WriteAllBytes(filename, bytes);
+    }
+
+    void swapCamera()
+    {
+        if (Input.touchCount > 0 && Input.GetTouch(0).phase == TouchPhase.Began)
+        {
+            isUsingFrontCamera = !isUsingFrontCamera;
+            frontCamera.enabled = isUsingFrontCamera;
+            backCamera.enabled = !isUsingFrontCamera;
+        }
     }
 }
