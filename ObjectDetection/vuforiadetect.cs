@@ -1,11 +1,13 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.UI;
 using Vuforia;
 
-public class MyObjectBehavior : MonoBehaviour, ITrackableEventHandler
+public class MyLabelBehavior : MonoBehaviour, ITrackableEventHandler
 {
     private TrackableBehaviour mTrackableBehaviour;
+    public Text label;
 
     // Start is called before the first frame update
     void Start()
@@ -15,6 +17,7 @@ public class MyObjectBehavior : MonoBehaviour, ITrackableEventHandler
         {
             mTrackableBehaviour.RegisterTrackableEventHandler(this);
         }
+        label.gameObject.SetActive(false);
     }
 
     public void OnTrackableStateChanged(TrackableBehaviour.Status previousStatus, TrackableBehaviour.Status newStatus)
@@ -23,13 +26,13 @@ public class MyObjectBehavior : MonoBehaviour, ITrackableEventHandler
             newStatus == TrackableBehaviour.Status.TRACKED ||
             newStatus == TrackableBehaviour.Status.EXTENDED_TRACKED)
         {
-            // Object has been detected, add behavior here:
-            Debug.Log("Object detected!");
+            // Object has been detected, enable label:
+            label.gameObject.SetActive(true);
         }
         else
         {
-            // Object is no longer being tracked, remove behavior here:
-            Debug.Log("Object lost!");
+            // Object is no longer being tracked, disable label:
+            label.gameObject.SetActive(false);
         }
     }
 }
