@@ -1,6 +1,5 @@
 public class CameraControllerTests
 {
-    [Test]
     public void TestTakePhoto()
     {
         var cameraObj = new GameObject();
@@ -15,8 +14,8 @@ public class CameraControllerTests
         Assert.IsNotNull(cameraController.photoDisplay.texture);
     }
 	
-	[Test]
-    public IEnumerator swapCamera()
+	// Verify that the back camera is swapped from front
+    public void swapCameraFtoB()
     {
         var cameraObj = new GameObject();
         var camera = cameraObj.AddComponent<Camera>();
@@ -38,8 +37,34 @@ public class CameraControllerTests
         Input.ResetInputAxes();
         yield return new WaitForSeconds(0.1f);
 
-        // Verify that the back camera is now enabled
         Assert.IsFalse(frontCamera.enabled);
         Assert.IsTrue(backCamera.enabled);
+    }
+	
+	// Verify that the front camera is swapped from back
+    public void swapCameraBtoF()
+    {
+        var cameraObj = new GameObject();
+        var camera = cameraObj.AddComponent<Camera>();
+
+		var backCameraObject = new GameObject();
+        var backCamera = backCameraObject.AddComponent<Camera>();
+        var frontCameraObject = new GameObject();
+        var frontCamera = frontCameraObject.AddComponent<Camera>();
+        backCamera.tag = "MainCamera";
+
+        yield return null;
+
+        Assert.IsTrue(backCamera.enabled);
+        Assert.IsFalse(frontCamera.enabled);
+
+        Input.simulateTouchCount = 1;
+        Input.simulateMouseWithTouches = true;
+        Input.ResetInputAxes();
+        yield return new WaitForSeconds(0.1f);
+
+        // Verify that the front camera is now enabled
+        Assert.IsFalse(backCamera.enabled);
+        Assert.IsTrue(frontCamera.enabled);
     }
 }
