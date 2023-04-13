@@ -44,7 +44,11 @@ extern void ARFeatheredPlaneMeshVisualizer_GenerateBoundaryUVs_mF756D3C1F7925A69
 extern void ARFeatheredPlaneMeshVisualizer__ctor_m9A77651BCAE58AA0B994FFF6C6B63B1CFF2729F6 (void);
 // 0x00000010 System.Void ARFeatheredPlaneMeshVisualizer::.cctor()
 extern void ARFeatheredPlaneMeshVisualizer__cctor_m56285A000EE27A1631BE9C5BCDA5C376E5D133C3 (void);
-static Il2CppMethodPointer s_methodPointers[16] = 
+// 0x00000011 System.Void SceneLoader::Screenloader(System.Int32)
+extern void SceneLoader_Screenloader_m9EC41F8E48D0B8E41E847F1FBC3EE6F13813FAEB (void);
+// 0x00000012 System.Void SceneLoader::.ctor()
+extern void SceneLoader__ctor_m2248766DF38AF07562AD31501C7275B8DF1B7D29 (void);
+static Il2CppMethodPointer s_methodPointers[18] = 
 {
 	AnchorCreator_get_AnchorPrefab_mBBAF7805E9D9F8D79408EE642D153BC76306B25A,
 	AnchorCreator_set_AnchorPrefab_m53CC9CC3022C713826B44536B48B462C8A1FACFF,
@@ -62,31 +66,35 @@ static Il2CppMethodPointer s_methodPointers[16] =
 	ARFeatheredPlaneMeshVisualizer_GenerateBoundaryUVs_mF756D3C1F7925A69CD8C7C8CCE56209AB321FEF5,
 	ARFeatheredPlaneMeshVisualizer__ctor_m9A77651BCAE58AA0B994FFF6C6B63B1CFF2729F6,
 	ARFeatheredPlaneMeshVisualizer__cctor_m56285A000EE27A1631BE9C5BCDA5C376E5D133C3,
+	SceneLoader_Screenloader_m9EC41F8E48D0B8E41E847F1FBC3EE6F13813FAEB,
+	SceneLoader__ctor_m2248766DF38AF07562AD31501C7275B8DF1B7D29,
 };
-static const int32_t s_InvokerIndices[16] = 
+static const int32_t s_InvokerIndices[18] = 
 {
-	5104,
-	4148,
-	5199,
-	5199,
-	5199,
-	5199,
-	8263,
-	5145,
-	4181,
-	5199,
-	5199,
-	5199,
-	4043,
-	4148,
-	5199,
-	8263,
+	5335,
+	4336,
+	5441,
+	5441,
+	5441,
+	5441,
+	8547,
+	5377,
+	4370,
+	5441,
+	5441,
+	5441,
+	4222,
+	4336,
+	5441,
+	8547,
+	4310,
+	5441,
 };
 IL2CPP_EXTERN_C const Il2CppCodeGenModule g_AssemblyU2DCSharp_CodeGenModule;
 const Il2CppCodeGenModule g_AssemblyU2DCSharp_CodeGenModule = 
 {
 	"Assembly-CSharp.dll",
-	16,
+	18,
 	s_methodPointers,
 	0,
 	NULL,
