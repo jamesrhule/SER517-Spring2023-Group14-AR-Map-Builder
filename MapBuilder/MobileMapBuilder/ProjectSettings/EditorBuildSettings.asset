@@ -6,7 +6,7 @@ EditorBuildSettings:
   serializedVersion: 2
   m_Scenes:
   - enabled: 0
-    path: Assets/Scenes/Main.unity
+    path: 
     guid: 74369e23e9b93664a802bb88c5bea256
   - enabled: 1
     path: Assets/Scenes/MainMenu.unity
@@ -17,6 +17,9 @@ EditorBuildSettings:
   - enabled: 1
     path: Assets/Scenes/TutorialScene.unity
     guid: d299dec496f663b4992ce7172d3c4034
+  - enabled: 1
+    path: Assets/Scenes/QRCode.unity
+    guid: 6baa35429ba6f48548bfb8e3ea616462
   m_configObjects:
     Unity.XR.WindowsMR.Settings: {fileID: 11400000, guid: 744b813df90924c169af73489b8325de,
       type: 2}
