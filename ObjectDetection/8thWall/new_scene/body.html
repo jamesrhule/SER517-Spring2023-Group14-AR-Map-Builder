@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <title>Man Walking on Road AR</title>
+    <script src="https://cdn.8thwall.com/web/aframe/8frame-2.1.0.min.js"></script>
+  </head>
+  <body>
+    <a-scene embedded arjs>
+      <a-assets>
+        <a-asset-item id="man-model" src="man.glb"></a-asset-item>
+        <a-asset-item id="road-model" src="road.glb"></a-asset-item>
+      </a-assets>
+
+      <a-marker preset="custom" type="pattern" url="marker.patt">
+        <a-entity position="0 0 0">
+          <a-entity
+            id="man"
+            gltf-model="#man-model"
+            position="0 0 -2"
+            scale="0.5 0.5 0.5"
+            animation="property: position; to: 0 0.25 -2.5; dur: 2000; loop: true; direction: alternate"
+          ></a-entity>
+          <a-entity
+            id="road"
+            gltf-model="#road-model"
+            position="0 -0.1 -2"
+            scale="0.5 0.5 0.5"
+            animation="property: rotation; to: 0 -180 0; dur: 5000; loop: true"
+          ></a-entity>
+        </a-entity>
+      </a-marker>
+      <a-entity camera></a-entity>
+    </a-scene>
+  </body>
+</html>
