@@ -1,0 +1,72 @@
+<!-- Copyright (c) 2022 8th Wall, Inc. -->
+<!-- body.html is optional; elements will be added to your html body after app.js is loaded. -->
+
+<div id="topTextContainer">
+    <p>Align the frame on your phone with the Dreamscape Learn video</p>
+  </div>
+  
+  <div id="hyperlinkButton" class="hidden" onclick=" window.open('https://www.dreamscapelearn.com','_blank')" style="display: block; z-index: 10">
+    <h2>Learn more about Dreamscape Learn</h2>
+  </div>
+  
+  <div id="placeItHereButton" style="display: block; z-index: 10">
+    <h2>My frame is aligned</h2>
+  </div>
+  
+  <div id="placeAnywhereButton">
+    <p>Place it anywhere</p>
+  </div>
+  
+  <div class="slide-box" id="slide-box">
+    <img src="./assets/DSL.png">
+  </div>
+  
+  <div class="gradient" id="gradient">
+    <img src="./assets/gradient.png">
+  </div>
+  
+  <div id="resetButtonContainer" class="hidden">
+    <p>Reset</p>
+  </div>
+  
+  <a-scene
+  placeithere-button
+  landing-page
+  xrextras-loading
+  xrextras-runtime-error
+  xrextras-gesture-detector
+  renderer="colorManagement:true; physicallyCorrectLights:true"
+  xrweb
+  reset-button
+  >
+  
+  <a-assets>
+    <a-asset-item id="reticle" src="assets/Reticle.glb"></a-asset-item>
+    <a-asset-item id="ridgehead" src="assets/ridgehead-v2.glb"></a-asset-item>
+     <a-asset-item id="spottedGlider" src="assets/Spotted-Glider-v1.glb"></a-asset-item>
+  </a-assets>
+  
+  <a-camera id='camera' position="0 8 0"
+  raycaster="objects: .cantap"
+  cursor="fuse: false; rayOrigin: mouse;"
+  ></a-camera>
+
+   <a-entity
+    id='frame'
+    tap-place-cursor
+    gltf-model = "#reticle"
+    scale = "0.6 0.6 0.6">
+  </a-entity>
+
+  <a-box
+    id="ground"
+    scale="1000 2 1000"
+    position="0 -2 0"
+    material="shader: shadow; transparent: true; opacity: 0.4"
+    shadow>
+  </a-box>
+
+  <a-light type="ambient" intensity="3"></a-light>
+
+</a-scene>
+
