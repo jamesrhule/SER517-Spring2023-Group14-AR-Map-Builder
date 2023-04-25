@@ -20,6 +20,9 @@ EditorBuildSettings:
   - enabled: 1
     path: Assets/Scenes/ARFeature.unity
     guid: df3650f8649e2304b9bef4f68412773e
+  - enabled: 1
+    path: Assets/Scenes/QRCode.unity
+    guid: 6baa35429ba6f48548bfb8e3ea616462
   m_configObjects:
     Unity.XR.WindowsMR.Settings: {fileID: 11400000, guid: 744b813df90924c169af73489b8325de,
       type: 2}
