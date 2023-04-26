@@ -6,20 +6,32 @@ EditorBuildSettings:
   serializedVersion: 2
   m_Scenes:
   - enabled: 0
-    path: Assets/Scenes/Main.unity
-    guid: 74369e23e9b93664a802bb88c5bea256
+    path: 
+    guid: 00000000000000000000000000000000
   - enabled: 1
-    path: Assets/Scenes/MainMenu.unity
-    guid: 479f498d88c2cd347a88a508b04d6ded
+    path: Assets/Scenes/CameraEnable.unity
+    guid: 213e9fe70cc83a64597c05102350274b
   - enabled: 1
-    path: Assets/ExampleAssets/Scenes/SampleScene.unity
-    guid: 9fc0d4010bbf28b4594072e72b8655ab
+    path: Assets/Scenes/locationEnable.unity
+    guid: 8ad7dc2d3d55b744684efffaeaeff0d8
+  - enabled: 1
+    path: Assets/Scenes/TimerEnable.unity
+    guid: 54209da393c517a4688b1b66a516886f
+  - enabled: 1
+    path: Assets/Scenes/MainScreen.unity
+    guid: 07cfc7af8913b914b88cc64928a4ebc6
   - enabled: 1
     path: Assets/Scenes/TutorialScene.unity
     guid: d299dec496f663b4992ce7172d3c4034
   - enabled: 1
+    path: Assets/ExampleAssets/Scenes/SampleScene.unity
+    guid: 9fc0d4010bbf28b4594072e72b8655ab
+  - enabled: 1
     path: Assets/Scenes/ARFeature.unity
     guid: df3650f8649e2304b9bef4f68412773e
+  - enabled: 0
+    path: Assets/Scenes/MainMenu.unity
+    guid: 479f498d88c2cd347a88a508b04d6ded
   m_configObjects:
     Unity.XR.WindowsMR.Settings: {fileID: 11400000, guid: 744b813df90924c169af73489b8325de,
       type: 2}
