@@ -79,3 +79,5 @@ sysinfo.txt
 # End of Unity .gitignore
 
 .vscode
+
+/MapBuilder/MobileMapBuilder/.vsconfig
